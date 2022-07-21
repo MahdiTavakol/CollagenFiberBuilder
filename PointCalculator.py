@@ -324,6 +324,7 @@ with open('MinerTemp.gro','w') as file:
 numberOfBeads = numberOfCollagenBeads + numberOfMineralBeads
 
 
+
 with open('4-MT-Mineralized.gro','w') as file:
 	file.write("CG for mineralized collagen microfibrill written by Mahdi Tavakol (mahditavakol90@gmail.com)\n")
 	file.write("{}\n".format(numberOfBeads))
