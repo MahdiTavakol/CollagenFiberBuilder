@@ -9,6 +9,7 @@ from scipy.interpolate import interp1d
 
 size = 10000000 #20000
 bondLength = 14
+scalingFactor = 1  # For cellZ larger than 10 the "scalingFactor"  must be 10. The coordinates will be in the unit of 10 nm.
 
 t=[]
 x=[]
@@ -29,23 +30,21 @@ cellNumberZMF=[]
 betaMF=[]
 bondLengths=[]
 numberOfCGAtoms = 0
+#cellVectorX=[39.970,0,0]
+#cellVectorY=[-7.2383,25.9598,0]
+#cellVectorZ=[-54.2489,-5.7914,675.7011]
 cellVectorX=[39.9620, 0.0000,  0.7852]
 cellVectorY=[-7.2369,25.9598, -0.1422]
 cellVectorZ=[ 0.0000, 0.0000,677.9000]
 aFCC=16.322
 cellsX=30
 cellsY=40
-cellsZ=5
+cellsZ=10 # For cellZ larger than 10 the "scalingFactor"  must be 10. The coordinates will be in the unit of 10 nm.
 radius=6700
 overlapTOgap = 0.8
 
-superCellVectorX=[227.95,0,0]
-superCellVectorY=[0,254.96,0]
-superCellsX=2
-superCellsY=2
-superCellsZ=1
-MfMfDistance = 20
-
+mineralToCollagenRadiusRatio = 1
+overlapMineralisationLengthRatio = 0  # 0 minerals only in the gap region, 1 minerals in the whole gap and the overlap length.
 
 with open('align.tcl','w') as file:
         file.write("lappend auto_path ~/Downloads/la1.0\n")
@@ -196,7 +195,7 @@ with open('2-Microfibril-Square.pdb','w') as file:
 					x = xOut[l]+(-cellsX/2+i)*cellVectorX[0]+(-cellsY/2+j)*cellVectorY[0]+(-4+k)*cellVectorZ[0]
 					y = yOut[l]+(-cellsX/2+i)*cellVectorX[1]+(-cellsY/2+j)*cellVectorY[1]+(-4+k)*cellVectorZ[1]
 					z = zOut[l]+(-cellsX/2+i)*cellVectorX[2]+(-cellsY/2+j)*cellVectorY[2]+(-4+k)*cellVectorZ[2]
-					if (z >= 0 and z <= 5*cellVectorZ[2]):
+					if (z >= 0 and z <= cellsZ*cellVectorZ[2]):
 						atomID = atomID + 1
 						file.write("ATOM{:7d}  CA  CG1 A{:4d}    {:8.3f}{:8.3f}{:8.3f} {:5.2f} {:5.2f}           C\n".format(atomID,resID,x,y,z,cellNumberX,cellNumberY))
 
@@ -221,40 +220,27 @@ with open('2-Microfibril-Square.gro','w') as file:
 					x = xOut[l]+(-cellsX/2+i)*cellVectorX[0]+(-cellsY/2+j)*cellVectorY[0]+k*cellVectorZ[0]
 					y = yOut[l]+(-cellsX/2+i)*cellVectorX[1]+(-cellsY/2+j)*cellVectorY[1]+k*cellVectorZ[1]
 					z = zOut[l]+(-cellsX/2+i)*cellVectorX[2]+(-cellsY/2+j)*cellVectorY[2]+k*cellVectorZ[2]
-					if (z > 5*cellVectorZ[2]):
-						z = z - 5*cellVectorZ[2]
+					if (z > cellsZ*cellVectorZ[2]):
+						#x = x - 5*cellVectorZ[0]
+						#y = y - 5*cellVectorZ[1]
+						z = z - cellsZ*cellVectorZ[2]
 					atomID = atomID + 1
-					xMF.append(x/10)
-					yMF.append(y/10)
-					zMF.append(z/10)
+					xMF.append(x/(10*scalingFactor))
+					yMF.append(y/(10*scalingFactor))
+					zMF.append(z/(10*scalingFactor))
 					cellNumberXMF.append(cellNumberX)
 					cellNumberYMF.append(cellNumberY)
 					cellNumberZMF.append(cellNumberZ)
 					resIDMF.append(resID)
 					if ((x+50)*(x+50)+(y-150)*(y-150)<radius):
 						betaMF[resID-1] = 1
-					if (k == 0):
-						file.write("{:5d}O{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 1):
-						file.write("{:5d}A{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 2):
-						file.write("{:5d}B{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 3):
-						file.write("{:5d}C{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 4):
-						file.write("{:5d}D{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 5):
-						file.write("{:5d}E{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 6):
-						file.write("{:5d}F{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 7):
-						file.write("{:5d}G{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 8):
-						file.write("{:5d}H{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 9):
-						file.write("{:5d}I{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
-					elif (k == 10):
-						file.write("{:5d}J{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x/10,y/10,z/10))   # nm
+					alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+					alphaDict = {idx:letter for idx, letter in enumerate(alphabet)}
+					if (atomID < 100000):
+						file.write("{:5d}{:s}{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,alphaDict[k],cellNumberX,cellNumberY,atomID,x/(10*scalingFactor),y/(10*scalingFactor),z/(10*scalingFactor))) #nm
+					else:
+						atomIDBase36 = np.base_repr(atomID,36)
+						file.write("{:5d}{:s}{:02d}{:02d}   CL{:5s}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,alphaDict[k],cellNumberX,cellNumberY,atomIDBase36,x/(10*scalingFactor),y/(10*scalingFactor),z/(10*scalingFactor))) #nm
 	file.write("  0.00000   0.00000  337.85055   0.00000   0.00000   0.00000   0.00000   0.00000   0.00000\n")
 
 atoms = atomID
@@ -264,12 +250,6 @@ for i in range(atoms):
 	if (betaMF[index-1] == 1):
 		newAtoms = newAtoms + 1
 
-xMFMin = 1000000
-yMFMin = 1000000
-zMFMin = 1000000
-xMFMax = -1000000
-yMFMax = -1000000
-zMFMax = -1000000
 
 numberOfCollagenBeads = newAtoms
 with open('3-Microfibril-Circular.gro','w') as file:
@@ -283,6 +263,7 @@ with open('3-Microfibril-Circular.gro','w') as file:
 		index = resIDMF[i]
 		if (betaMF[index-1] == 1):
 			k = cellNumberZMF[i]
+			#resID = resIDMF[i]
 			if (currResID != resIDMF[i]):
 				currResID = resIDMF[i]
 				resID = resID + 1
@@ -292,40 +273,12 @@ with open('3-Microfibril-Circular.gro','w') as file:
 			x = xMF[i]
 			y = yMF[i]
 			z = zMF[i]
-			if (x < xMFMin):
-				xMFMin = x
-			if (x > xMFMax):
-				xMFMax = x
-			if (y < yMFMin):
-				yMFMin = y
-			if (y > yMFMax):
-				yMFMax = y
-			if (z < zMFMin):
-				zMFMin = z
-			if (z > zMFMax):
-				zMFMax = z
-			if (k == 0):
-				file.write("{:5d}O{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 1):
-				file.write("{:5d}A{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 2):
-				file.write("{:5d}B{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 3):
-				file.write("{:5d}C{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 4):
-				file.write("{:5d}D{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 5):
-				file.write("{:5d}E{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 6):
-				file.write("{:5d}F{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 7):
-				file.write("{:5d}G{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 8):
-				file.write("{:5d}H{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 9):
-				file.write("{:5d}I{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
-			elif (k == 10):
-				file.write("{:5d}J{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,cellNumberX,cellNumberY,atomID,x,y,z))   # nm
+			alphaDict = {idx:letter for idx, letter in enumerate(alphabet)}
+			if (atomID < 100000):
+				file.write("{:5d}{:s}{:02d}{:02d}   CL{:5d}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,alphaDict[k],cellNumberX,cellNumberY,atomID,x,y,z)) #nm
+			else:
+				atomIDBase36 = np.base_repr(atomID,36)
+				file.write("{:5d}{:s}{:02d}{:02d}   CL{:5s}{:8.3f}{:8.3f}{:8.3f}\n".format(resID,alphaDict[k],cellNumberX,cellNumberY,atomIDBase36,x,y,z)) #nm
 	file.write("  0.00000   0.00000  337.85055\n")
 
 
@@ -341,7 +294,7 @@ with open('MinerTemp.gro','w') as file:
 	R = 100.0
 	nX = int(2*radius/aFCC)
 	nY = int(2*radius/aFCC)
-	nZ = int(5*cellVectorZ[2]/aFCC)
+	nZ = int(cellsZ*cellVectorZ[2]/aFCC)
 	basis1 = [ 0 , 0 , 0 ]
 	basis2 = [ 0 ,0.5,0.5]
 	basis3 = [0.5, 0 ,0.5]
@@ -361,10 +314,10 @@ with open('MinerTemp.gro','w') as file:
 					xFCC = x + aFCC*base[0]
 					yFCC = y + aFCC*base[1]
 					zFCC = z + aFCC*base[2]
-					if ((x+50)*(x+50)+(y-150)*(y-150) < 0.5*radius and cellZIndex > (1-0)*overlapSize):
+					if ((x+50)*(x+50)+(y-150)*(y-150)<mineralToCollagenRadiusRatio * radius and cellZIndex >= (1-overlapMineralisationLengthRatio)*overlapSize):
 						atomID = atomID + 1
 						numberOfMineralBeads = numberOfMineralBeads + 1
-						file.write("{:5d}Z{:04d}   HA11111{:8.3f}{:8.3f}{:8.3f}\n".format(resID,i,xFCC/10,yFCC/10,zFCC/10))   # nm
+						file.write("{:5d}Z{:04d}   HA11111{:8.3f}{:8.3f}{:8.3f}\n".format(resID,i,xFCC/(10*scalingFactor),yFCC/(10*scalingFactor),zFCC/(10*scalingFactor)))   # nm
 
 
 
@@ -390,8 +343,8 @@ with open('4-MT-Mineralized.gro','w') as file:
 	MinerFile.close()
 
 
-cutoffs = [5.05211]
-cutoff1 =  5.05211
+cutoffs = [14.4076,14.4276,14.4576,14.4876,14.5076]
+cutoffs = [x/scalingFactor for x in cutoffs]
 
 for i in cutoffs:
 	with open('badcontact.tcl','w') as file:
@@ -399,135 +352,13 @@ for i in cutoffs:
 		file.write("mol load gro 4-MT-Mineralized.gro\n")
        		file.write("set sel [atomselect top all]\n")
         	file.write("$sel set beta 0\n")
-        	file.write("set bad [atomselect top {resid > ")
-        	file.write("{}".format(lastCollagenResID))
-        	file.write(" and ( within ")
-        	file.write("{}".format(distance))
-        	file.write(" of resid < ")
-        	file.write("{}".format(lastCollagenResID+1))
-        	file.write(")}]\n")
+		file.write("set bad [atomselect top {type HA and (within ")
+		file.write("{}".format(distance))
+		file.write(" of type CL)}]\n")
         	file.write("$bad set beta 1\n")
         	file.write("set out [atomselect top {beta 0}]\n")
-        	file.write("$out writepdb 4-MT-Mineralized-{}.pdb\n".format(distance))
-		file.write("mol delete top\n")
-		file.write("mol load pdb 4-MT-Mineralized-{}.pdb\n".format(distance))
-       		file.write("set sel [atomselect top all]\n")
-		file.write("$sel writegro 4-MT-Mineralized-{}.gro\n".format(distance))
+        	file.write("$out writegro 4-MT-Mineralized-{}.gro\n".format(distance))
 		file.write("mol delete top\n")
 		file.write("exit\n")
 		file.close()
 		os.system("vmd -dispdev text -eofexit -e badcontact.tcl")
-#os.system("rm badcontact.tcl")
-
-oneCellSize = len(xMF)
-superCells = superCellsX*superCellsY*superCellsZ
-
-atomID = superCells*numberOfCollagenBeads
-
-with open('MinerTemp2.gro','w') as file:
-	XMin =  xMFMin*10 - MfMfDistance/2
-	XMax =  xMFMax*10 + superCellsX*MfMfDistance + superCellVectorX[0]*(superCellsX-1)
-	YMin =  yMFMin*10 - MfMfDistance/2
-	YMax =  yMFMax*10 + superCellsY*MfMfDistance + superCellVectorY[1]*(superCellsY-1)
-	ZMin =  zMFMin*10
-	ZMax =  zMFMax*10
-	numberOfMineralBeads = 0
-	nX = int((XMax - XMin)/aFCC)
-	nY = int((YMax - YMin)/aFCC)
-	nZ = int((ZMax - ZMin)/aFCC)
-	basis1 = [ 0 , 0 , 0 ]
-	basis2 = [ 0 ,0.5,0.5]
-	basis3 = [0.5, 0 ,0.5]
-	basis4 = [0.5,0.5, 0 ]
-	basis = [basis1,basis2,basis3,basis4]
-	for i in range(nX):
-		for j in range(nY):
-			for k in range(nZ):
-				x = XMin + i*aFCC
-				y = YMin + j*aFCC
-				z = ZMin + k*aFCC
-				for base in basis :
-					xFCC = x + aFCC*base[0]
-					yFCC = y + aFCC*base[1]
-					zFCC = z + aFCC*base[2]
-					atomID = atomID + 1
-					numberOfMineralBeads = numberOfMineralBeads + 1
-					file.write("{:5d}Z{:04d}   EA11111{:8.3f}{:8.3f}{:8.3f}\n".format(resID,i,xFCC/10,yFCC/10,zFCC/10))   # nm
-
-MTFile = open('4-MT-Mineralized-5.05211.gro', 'r')
-lineNumber = 1
-for line in MTFile:
-	if (lineNumber == 2):
-		intraFibrilBeads = int(line[:-1])
-	if (lineNumber > 2):
-		break
-	lineNumber+=1
-
-numberOfBeads = numberOfMineralBeads + superCells*intraFibrilBeads
-
-with open('4-MT-Mineralized2.gro','w') as file:
-	file.write("CG for mineralized collagen microfibrill written by Mahdi Tavakol (mahditavakol90@gmail.com)\n")
-	file.write("{}\n".format(numberOfBeads))
-
-	beads = 0
-	for i in range(superCellsX):
-		for j in range(superCellsY):
-			MTFile = open('4-MT-Mineralized-5.05211.gro', 'r')
-		        next(MTFile)
-			next(MTFile)
-			counter = 0
-			for line in MTFile:
-				if (counter<intraFibrilBeads):
-					dum = line[0:14]
-					x = float(line[20:28])
-					y = float(line[28:36])
-					z = float(line[36:44])
-					x = x + (i*superCellVectorX[0] + i*MfMfDistance)/10
-					y = y + (j*superCellVectorY[1] + j*MfMfDistance)/10
-					beads = beads + 1
-					counter = counter + 1
-					file.write("{:14s}{:6d}{:8.3f}{:8.3f}{:8.3f}\n".format(dum,beads,x,y,z))   # nm
-				else:
-					MTFile.close()
-					break
-
-	MinerFile = open('MinerTemp2.gro', 'r')
-	for line in MinerFile:
-		file.write(line)
-	file.write("  0.00000   0.00000  337.85055\n")
-	MinerFile.close()
-
-
-
-cutoffs = [5,5.1,5.2]
-for i in cutoffs:
-	with open('badcontact2.tcl','w') as file:
-		distance = i
-        	file.write("mol load gro 4-MT-Mineralized2.gro\n")
-       		file.write("set sel [atomselect top all]\n")
-        	file.write("$sel set beta 0\n")
-        	file.write("set bad [atomselect top {type EA ")
-        	file.write(" and (( within ")
-        	file.write("{}".format(distance))
-        	file.write(" of not type EA ")
-        	file.write(") ")
-		for m in  range(superCellsX):
-			for n in range(superCellsY):
-				XCenter = -50 + m*superCellVectorX[0] + m*MfMfDistance
-				YCenter = 150 + n*superCellVectorY[1] + n*MfMfDistance
-				file.write(" or ((x-{})*(x-{})+(y-{})*(y-{})<6700)".format(XCenter,XCenter, YCenter,YCenter))
-		file.write(" )}]\n")
-        	file.write("$bad set beta 1\n")
-        	file.write("set out [atomselect top {beta 0}]\n")
-        	file.write("$out writepdb 4-MT-Mineralized2-{}-{}.pdb\n".format(cutoff1,distance))
-		file.write("mol delete top\n")
-		file.write("mol load pdb 4-MT-Mineralized2-{}-{}.pdb\n".format(cutoff1,distance))
-       		file.write("set sel [atomselect top all]\n")
-		file.write("$sel writegro 4-MT-Mineralized2-{}-{}.gro\n".format(cutoff1,distance))
-		file.write("mol delete top\n")
-		file.write("exit\n")
-		file.close()
-		os.system("vmd -dispdev text -eofexit -e badcontact2.tcl")
-
-
-
